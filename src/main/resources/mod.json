@@ -1,7 +1,7 @@
 {
   // Java verticle
-  "main": "",
-  "includes": "",
+  "main": "net.pjtb.vs.Boot",
+  "includes": "com.jetdrone~mod-bson-io~2.0.1",
 
   "description": "A legacy version MapleStory server emulator implemented in Vert.x",
   "licenses": ["GNU Affero General Public License, version 3"],

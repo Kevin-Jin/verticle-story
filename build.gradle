@@ -55,6 +55,10 @@ dependencies {
   provided "org.codehaus.groovy:groovy-all:$groovyVersion"
   provided "io.vertx:lang-groovy:$groovyLangModVersion@jar"
 
+  compile "com.jetdrone:mod-bson-io:2.0.1"
+  compile "org.bouncycastle:bcprov-jdk15on:1.50"
+  compile "org.mozilla:rhino:1.7R4"
+  compile "org.codehaus.woodstox:woodstox-core-lgpl:4.4.0"
 }
 
 test {
