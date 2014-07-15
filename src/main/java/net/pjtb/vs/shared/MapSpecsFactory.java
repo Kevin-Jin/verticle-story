@@ -3,8 +3,6 @@ package net.pjtb.vs.shared;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.pjtb.vs.specsside.SpecsLoaderDaemon;
-
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 
@@ -31,15 +29,15 @@ public class MapSpecsFactory extends SpecsFactory<Integer, MapSpecs> {
 	@Override
 	protected void loadAsync(MapSpecs populate, EventBus eventBus) {
 		Map<String, Object> txBson = new HashMap<String, Object>();
-		txBson.put("id", Integer.valueOf(populate.getId()));
-		eventBus.sendWithTimeout(SpecsLoaderDaemon.class.getName() + ".map", BSON.encode(txBson), TIMEOUT, result -> populate.setLoaded(result.succeeded()));
+		txBson.put("id", EventAddresses.mapKey(populate.getId()));
+		eventBus.sendWithTimeout(String.format(EventAddresses.SPECS_LOADED_NOTIFICATION, "map"), BSON.encode(txBson), TIMEOUT, result -> populate.setLoaded(result.succeeded()));
 	}
 
 	public void retrieveSpecs(int mapId, Handler<MapSpecs> doneHandler, EventBus eventBus) {
-		super.retrieveSpecs(Integer.valueOf(mapId), doneHandler, eventBus);
+		super.retrieveSpecs(EventAddresses.mapKey(mapId), doneHandler, eventBus);
 	}
 
 	public MapSpecs getSpecsShell(int mapId) {
-		return super.getSpecsShell(Integer.valueOf(mapId));
+		return super.getSpecsShell(EventAddresses.mapKey(mapId));
 	}
 }

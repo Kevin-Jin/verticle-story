@@ -36,15 +36,15 @@ public class PartyFactory {
 		loadedParties = new HashMap<>();
 	}
 
-	private void registerWorld(EventBus eventBus, Byte worldObj) {
-		eventBus.registerHandler(String.format(EventAddresses.PARTY_REQUEST, worldObj), (Handler<Message<Buffer>>) (Message<Buffer> msg) -> {
+	private void registerWorld(EventBus eventBus, Byte worldKey) {
+		eventBus.registerHandler(String.format(EventAddresses.PARTY_REQUEST, worldKey), (Handler<Message<Buffer>>) (Message<Buffer> msg) -> {
 			Map<String, Object> rxBson = BSON.decode(msg.body());
 			String op = (String) rxBson.get("op");
 			Integer partyId = (Integer) rxBson.get("id");
 
 			switch (op) {
 				case "load": {
-					retrieveParty(worldObj.byteValue(), partyId.intValue(), eventBus, party -> {
+					retrieveParty(worldKey.byteValue(), partyId.intValue(), eventBus, party -> {
 						if (party == null) {
 							msg.fail(1, "Failed to load party");
 							return;
@@ -61,27 +61,27 @@ public class PartyFactory {
 	}
 
 	public void retrieveParty(byte world, int id, EventBus eventBus, Handler<Party> doneHandler) {
-		Byte worldObj = Byte.valueOf(world);
-		Integer idObj = Integer.valueOf(id);
-		Map<Integer, Party> worldParties = loadedParties.get(worldObj);
+		Byte worldKey = EventAddresses.worldKey(world);
+		Integer idKey = EventAddresses.partyKey(id);
+		Map<Integer, Party> worldParties = loadedParties.get(worldKey);
 		boolean registerWorld = false;
 		if (worldParties == null) {
 			registerWorld = true;
 			worldParties = new HashMap<>();
-			loadedParties.put(worldObj, worldParties);
+			loadedParties.put(worldKey, worldParties);
 		}
 
-		Party p = worldParties.get(idObj);
+		Party p = worldParties.get(idKey);
 		if (p != null) {
 			p.addOnLoaded(doneHandler);
 		} else {
 			Party newParty = new Party();
-			worldParties.put(idObj, newParty);
+			worldParties.put(idKey, newParty);
 			Map<String, Object> txBson = new HashMap<>();
 			txBson.put("op", "load");
-			txBson.put("id", idObj);
+			txBson.put("id", idKey);
 
-			eventBus.sendWithTimeout(String.format(EventAddresses.PARTY_REQUEST, worldObj), txBson, TIMEOUT, (AsyncResult<Message<Buffer>> result) -> {
+			eventBus.sendWithTimeout(String.format(EventAddresses.PARTY_REQUEST, worldKey), txBson, TIMEOUT, (AsyncResult<Message<Buffer>> result) -> {
 				//send a request to other threads to obtain party info
 				if (result.succeeded()) {
 					Map<String, Object> rxBson = BSON.decode(result.result().body());
@@ -96,7 +96,7 @@ public class PartyFactory {
 			});
 			if (registerWorld)
 				//if we haven't already, register a party request handler for this world
-				registerWorld(eventBus, worldObj);
+				registerWorld(eventBus, worldKey);
 		}
 	}
 }

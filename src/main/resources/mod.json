@@ -1,6 +1,6 @@
 {
   // Java verticle
-  "main": "net.pjtb.vs.Boot",
+  "main": "net.pjtb.vs.shared.Boot",
   "includes": "com.jetdrone~mod-bson-io~2.0.1",
 
   "description": "A legacy version MapleStory server emulator implemented in Vert.x",

@@ -1,4 +1,5 @@
-= Verticle Story =
+Verticle Story
+==============
 
 This experiment moves away from the common monolithic game, login, shop, and hub
 servers approach and steers towards a more service-oriented architecture. Load

@@ -21,7 +21,7 @@ public class ChannelMap {
 
 	protected void spawn(int mobId) {
 		//send packets for monster spawns
-		vertx.eventBus().publish(String.format(EventAddresses.MAP_BROADCAST, Byte.valueOf(world), Byte.valueOf(channel), Integer.valueOf(mapId)), new byte[0]);
+		vertx.eventBus().publish(String.format(EventAddresses.MAP_BROADCAST, EventAddresses.fullyQualifiedChannelKey(world,  channel), EventAddresses.mapKey(mapId)), new byte[0]);
 	}
 
 	protected void respawn() {

@@ -15,54 +15,43 @@ import org.vertx.java.platform.Verticle;
 import com.jetdrone.vertx.mods.bson.BSON;
 
 public class MapDaemon extends Verticle {
-	//TODO: instead of using two bytes, we can just use a single short
-	//to represent a channel number in a particular world, e.g. (world * 100 + channel)
 	private final Map<String, Handler<Message<Buffer>>> handlers = new HashMap<>();
-	private final Map<Byte, Map<Byte, Map<Integer, ChannelMap>>> loadedMaps = new HashMap<>();
+	private final Map<Short, Map<Integer, ChannelMap>> loadedMaps = new HashMap<>();
 
 	/**
-	 * If loadedMaps does not contain entries for the world and channel,
+	 * If loadedMaps does not contain entries for the channel,
 	 * then this method will create them.
 	 *
-	 * @param worldObj
-	 * @param channelObj
-	 * @param idObj
+	 * @param fqChKey
+	 * @param idKey
 	 * @return null if the map is not yet loaded.
 	 */
-	private ChannelMap getMap(Byte worldObj, Byte channelObj, Integer idObj) {
-		Map<Byte, Map<Integer, ChannelMap>> worldMaps = loadedMaps.get(worldObj);
-		if (worldMaps == null) {
-			worldMaps = new HashMap<>();
-			loadedMaps.put(worldObj, worldMaps);
-			return null;
-		}
-
-		Map<Integer, ChannelMap> channelMaps = worldMaps.get(channelObj);
+	private ChannelMap getMap(Short fqChKey, Integer idKey) {
+		Map<Integer, ChannelMap> channelMaps = loadedMaps.get(fqChKey);
 		if (channelMaps == null) {
 			channelMaps = new HashMap<>();
-			worldMaps.put(worldObj, channelMaps);
+			loadedMaps.put(fqChKey, channelMaps);
 			return null;
 		}
 
-		return channelMaps.get(idObj);
+		return channelMaps.get(idKey);
 	}
 
 	private void listenForMapSpecificRequests() {
 		JsonObject config = container.config();
-		byte startChannel = (byte) ((Integer) config.getNumber("startChannel")).intValue();
-		byte endChannel = (byte) ((Integer) config.getNumber("endChannel")).intValue();
-		byte world = (byte) ((Integer) config.getNumber("world")).intValue();
-		Byte worldObj = Byte.valueOf((byte) world);
+		byte startChannel = ((Number) config.getNumber("startChannel")).byteValue();
+		byte endChannel = ((Number) config.getNumber("endChannel")).byteValue();
+		byte world = ((Number) config.getNumber("world")).byteValue();
 		for (byte i = startChannel; i < endChannel; i++) {
 			byte channel = i;
-			Byte channelObj = Byte.valueOf((byte) channel);
-			String address = String.format(EventAddresses.MAP_REQUEST, worldObj, channelObj);
+			Short fqChKey = EventAddresses.fullyQualifiedChannelKey(world, channel);
+			String address = String.format(EventAddresses.MAP_REQUEST, fqChKey);
 			Handler<Message<Buffer>> requestHandler = msg -> {
 				Map<String, Object> rxBson = BSON.decode(msg.body());
 				String op = (String) rxBson.get("op");
 				Integer mapId = (Integer) rxBson.get("id");
 
-				ChannelMap map = getMap(worldObj, channelObj, mapId);
+				ChannelMap map = getMap(fqChKey, mapId);
 				switch (op) {
 					case "ensureLoaded": {
 						if (map != null) {
@@ -70,7 +59,7 @@ public class MapDaemon extends Verticle {
 						} else {
 							MapSpecsFactory.getInstance().retrieveSpecs(mapId.intValue(), specs -> {
 								if (specs != null) {
-									loadedMaps.get(worldObj).get(channelObj).put(mapId, new ChannelMap(vertx, world, channel, mapId.intValue(), specs));
+									loadedMaps.get(fqChKey).put(mapId, new ChannelMap(vertx, world, channel, mapId.intValue(), specs));
 									msg.reply();
 								} else {
 									msg.fail(1, "Failed to load map specifications");
@@ -98,10 +87,9 @@ public class MapDaemon extends Verticle {
 
 	private void setUpRespawns() {
 		vertx.setPeriodic(30000, timer -> {
-			for (Map<Byte, Map<Integer, ChannelMap>> worldMaps : loadedMaps.values())
-				for (Map<Integer, ChannelMap> channelMaps : worldMaps.values())
-					for (ChannelMap map : channelMaps.values())
-						map.respawn();
+			for (Map<Integer, ChannelMap> channelMaps : loadedMaps.values())
+				for (ChannelMap map : channelMaps.values())
+					map.respawn();
 		});
 	}
 

@@ -27,39 +27,49 @@ public class WorldCharacter {
 	}
 
 	public void setMap(int mapId) {
-		ses.unsubscribe(String.format(EventAddresses.MAP_BROADCAST, world, channel, map));
+		Short fqChKey = EventAddresses.fullyQualifiedChannelKey(world, channel);
+		Integer mapKey = EventAddresses.mapKey(map);
+		ses.unsubscribe(String.format(EventAddresses.MAP_BROADCAST, fqChKey, mapKey));
 		map = mapId;
-		ses.subscribe(String.format(EventAddresses.MAP_BROADCAST, world, channel, map));
+		mapKey = EventAddresses.mapKey(map);
+		ses.subscribe(String.format(EventAddresses.MAP_BROADCAST, fqChKey, mapKey));
 		byte[] loginNotification = new byte[0];
-		ses.publish(String.format(EventAddresses.MAP_BROADCAST, world, channel, map), loginNotification, charId);
+		ses.publish(String.format(EventAddresses.MAP_BROADCAST, fqChKey, mapKey), loginNotification, charId);
 	}
 
 	public void setParty(int partyId) {
+		Byte worldKey = EventAddresses.worldKey(world);
+		Integer partyKey = EventAddresses.partyKey(party);
 		if (party != 0)
-			ses.unsubscribe(String.format(EventAddresses.PARTY_BROADCAST, world, channel, party));
+			ses.unsubscribe(String.format(EventAddresses.PARTY_BROADCAST, worldKey, partyKey));
 		party = partyId;
 		if (party != 0) {
-			ses.subscribe(String.format(EventAddresses.PARTY_BROADCAST, world, channel, party));
+			partyKey = EventAddresses.partyKey(party);
+			ses.subscribe(String.format(EventAddresses.PARTY_BROADCAST, worldKey, partyKey));
 			byte[] loginNotification = new byte[0];
-			ses.publish(String.format(EventAddresses.PARTY_BROADCAST, world, channel, party), loginNotification, charId);
+			ses.publish(String.format(EventAddresses.PARTY_BROADCAST, worldKey, partyKey), loginNotification, charId);
 		}
 	}
 
 	public void setGuild(int guildId) {
+		Byte worldKey = EventAddresses.worldKey(world);
 		guild = guildId;
 		if (guild != 0) {
-			ses.subscribe(String.format(EventAddresses.GUILD_BROADCAST, world, channel, guild));
+			Integer guildKey = EventAddresses.guildKey(guild);
+			ses.subscribe(String.format(EventAddresses.GUILD_BROADCAST, worldKey, guildKey));
 			byte[] loginNotification = new byte[0];
-			ses.publish(String.format(EventAddresses.GUILD_BROADCAST, world, channel, guild), loginNotification, charId);
+			ses.publish(String.format(EventAddresses.GUILD_BROADCAST, worldKey, guildKey), loginNotification, charId);
 		}
 	}
 
 	public void setChatroom(int chatroomId) {
+		Byte worldKey = EventAddresses.worldKey(world);
 		chatroom = chatroomId;
 		if (chatroom != 0) {
-			ses.subscribe(String.format(EventAddresses.CHATROOM_BROADCAST, world, channel, chatroom));
+			Integer chatroomKey = EventAddresses.chatroomKey(chatroom);
+			ses.subscribe(String.format(EventAddresses.CHATROOM_BROADCAST, worldKey, chatroomKey));
 			byte[] loginNotification = new byte[0];
-			ses.publish(String.format(EventAddresses.CHATROOM_BROADCAST, world, channel, chatroom), loginNotification, charId);
+			ses.publish(String.format(EventAddresses.CHATROOM_BROADCAST, worldKey, chatroomKey), loginNotification, charId);
 		}
 	}
 }

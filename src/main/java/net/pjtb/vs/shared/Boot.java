@@ -1,4 +1,4 @@
-package net.pjtb.vs;
+package net.pjtb.vs.shared;
 
 import net.pjtb.vs.mapside.MapDaemon;
 import net.pjtb.vs.playerside.GameSideDaemon;
@@ -8,11 +8,11 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
 public class Boot extends Verticle {
-	private void deployMapServer(int startChannel, int endChannel) {
+	private void deployMapServer(byte startChannel, byte endChannel) {
 		JsonObject config = new JsonObject();
-		config.putNumber("world", Integer.valueOf(0));
-		config.putNumber("startChannel", Integer.valueOf(startChannel));
-		config.putNumber("endChannel", Integer.valueOf(endChannel));
+		config.putNumber("world", EventAddresses.worldKey((byte) 0));
+		config.putNumber("startChannel", EventAddresses.channelKey(startChannel));
+		config.putNumber("endChannel", EventAddresses.channelKey(endChannel));
 		container.deployVerticle(MapDaemon.class.getName(), config);
 	}
 
@@ -25,12 +25,12 @@ public class Boot extends Verticle {
 
 		//if channels is not divisible by mapServers, the earlier map servers serve fewer channels
 		//this is fair because channel 1 is usually more crowded than channel 20
-		final int channels = 7;
+		final byte channels = 7;
 		final int mapServers = Math.max(cores / 2, 1);
 		final int channelsPerMapServer = channels / mapServers;
-		int startChannel = 1, endChannel;
-		for (int i = 0; i < mapServers - 1; i++, startChannel = endChannel + 1) {
-			endChannel = startChannel + channelsPerMapServer - 1;
+		byte startChannel = 1, endChannel;
+		for (int i = 0; i < mapServers - 1; i++, startChannel = (byte) (endChannel + 1)) {
+			endChannel = (byte) (startChannel + channelsPerMapServer - 1);
 			deployMapServer(startChannel, endChannel);
 		}
 		deployMapServer(startChannel, channels);

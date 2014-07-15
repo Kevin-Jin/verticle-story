@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
+import net.pjtb.vs.shared.EventAddresses;
+
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
@@ -89,7 +91,7 @@ public abstract class SpecsLoaderDaemon extends Verticle {
 
 	@Override
 	public void start() {
-		vertx.eventBus().registerLocalHandler(SpecsLoaderDaemon.class.getName() + ".map", this::handleMapSpecsRequest);
-		vertx.eventBus().registerLocalHandler(SpecsLoaderDaemon.class.getName() + ".reactor", this::handleReactorSpecsRequest);
+		vertx.eventBus().registerLocalHandler(String.format(EventAddresses.SPECS_LOADED_NOTIFICATION, "map"), this::handleMapSpecsRequest);
+		vertx.eventBus().registerLocalHandler(String.format(EventAddresses.SPECS_LOADED_NOTIFICATION, "reactor"), this::handleReactorSpecsRequest);
 	}
 }

@@ -3,8 +3,6 @@ package net.pjtb.vs.shared;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.pjtb.vs.specsside.SpecsLoaderDaemon;
-
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 
@@ -32,7 +30,7 @@ public class ReactorSpecsFactory extends SpecsFactory<String, ReactorSpecs> {
 	protected void loadAsync(ReactorSpecs populate, EventBus eventBus) {
 		Map<String, Object> txBson = new HashMap<String, Object>();
 		txBson.put("scriptName", populate.getScriptName());
-		eventBus.sendWithTimeout(SpecsLoaderDaemon.class.getName() + ".reactor", BSON.encode(txBson), TIMEOUT, result -> populate.setLoaded(result.succeeded()));
+		eventBus.sendWithTimeout(String.format(EventAddresses.SPECS_LOADED_NOTIFICATION, "reactor"), BSON.encode(txBson), TIMEOUT, result -> populate.setLoaded(result.succeeded()));
 	}
 
 	@Override

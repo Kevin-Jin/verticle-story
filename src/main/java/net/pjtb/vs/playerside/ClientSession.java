@@ -58,9 +58,7 @@ public class ClientSession {
 	}
 
 	public void init() {
-		socket.dataHandler(buffer -> {
-			receive(buffer);
-		});
+		socket.dataHandler(this::receive);
 		socket.endHandler(v -> {
 			close("Received EOF from client");
 		});
